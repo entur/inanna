@@ -5,8 +5,8 @@
   "claimsNamespace": "https://ror.entur.io/role_assignments",
   "preferredNameNamespace": "https://ror.entur.io/preferred_name",
   "oidcConfig": {
-    "authority": "https://ror-entur-dev.eu.auth0.com",
-    "client_id": "6QhlepsRl4qsg59nraT5nRGcPIgtSFyW",
+    "authority": "https://partner.dev.entur.org",
+    "client_id": "NmNuuhKo3mbi3FatxNoFUnnQKM2IqWdX",
     "extraQueryParams": {
       "audience": "https://ror.api.dev.entur.io"
     }
