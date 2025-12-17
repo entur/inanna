@@ -7,7 +7,7 @@
     "authority": "https://partner.dev.entur.org",
     "client_id": "zHJVBMUmCU4rEIvkXjDyB1v8KVJ9lf1p",
     "extraQueryParams": {
-      "audience": "https://ror.api.dev.entur.io"
+      "audience": "https://api.dev.entur.io"
     }
   },
   "themeFilePath": "/theme-dev.json"
