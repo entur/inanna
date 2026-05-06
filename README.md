@@ -107,7 +107,6 @@ Inanna's `src/` mixes two organizational styles. Before adding files, know which
 - New hook used by ≥2 features → `hooks/`. Single-feature hook → leave it next to its caller.
 - New `.types.ts` file → next to its implementation (existing pattern: `viewConfigTypes.ts`, `dataTableTypes.ts`, `searchTypes.ts`, `productTypes.ts`, `stopPlaceTypes.ts`).
 - JSX → `.tsx`. No JSX → `.ts`.
-- File over 200 lines → consider splitting (see Open Questions on enforcement).
 
 ---
 
@@ -579,4 +578,8 @@ export default function ProductView() {
 Finally, add a route for your new page in your main router (e.g., App.tsx) and a link to it in the main menu (e.g., Menu.tsx).
 By following these steps, you can quickly and cleanly add new data views to the application, leveraging the reusable architecture to minimize boilerplate and ensure consistency.
 
-A fully functioning version of the Product example can be found in /src/data/products/ . Alongside another example under /src/data/stop-places. 
+A fully functioning version of the Product example can be found in /src/data/products/ . Alongside another example under /src/data/stop-places.
+
+---
+
+Known design ambiguities in the current code are tracked separately in [OPEN_QUESTIONS.md](./OPEN_QUESTIONS.md).
