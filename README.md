@@ -79,6 +79,38 @@ A Structured Starting Point for Open-Source Frontend Applications.
 
 ---
 
+## Folder semantics (today)
+
+Inanna's `src/` mixes two organizational styles. Before adding files, know which one you're touching.
+
+**Vertical (feature) folders — peeled off cleanly:**
+
+- `auth/` — OIDC bootstrap, ProtectedRoute, session context.
+- `config/` — runtime config fetch + context.
+- `theme/` — `createThemeFromConfig`, MUI augmentation, `CustomizationContext`, `useAppTheme`.
+- `map/` — `mapStyle.ts`, `RegisterIcons.tsx` (overlaps with `components/map/`, see Open Questions).
+
+**Horizontal (file-kind) folders — pre-feature-folder layout:**
+
+- `components/` — UI components grouped by sub-area (`data/`, `search/`, `map/`, `header/`, `sidebar/`, `dialogs/`, `common/`, `auth/`).
+- `hooks/` — every hook in the app, owned by ~5 different features.
+- `pages/` — mixes infrastructure (`GenericDataViewPage.tsx`), demo views (`StopPlaceView.tsx`, `ProductView.tsx`), and real pages (`Home.tsx`, `MapView.tsx`).
+- `data/` — example data only (`stop-places/`, `products/`); not a generic data-access layer.
+- `utils/` — domain-neutral helpers (`geojsonUtils.ts`, `iconLoaderUtils.ts`).
+- `types/` — currently holds one file (`viewConfigTypes.ts`); see Open Questions.
+- `contexts/` — top-level React contexts not tied to a single feature folder.
+
+**Where new files go (current convention):**
+
+- New page → `pages/`. New route in `App.tsx`.
+- New table-backed feature → `data/<feature>/` for the data hook + view config; reuse `pages/GenericDataViewPage.tsx`.
+- New hook used by ≥2 features → `hooks/`. Single-feature hook → leave it next to its caller.
+- New `.types.ts` file → next to its implementation (existing pattern: `viewConfigTypes.ts`, `dataTableTypes.ts`, `searchTypes.ts`, `productTypes.ts`, `stopPlaceTypes.ts`).
+- JSX → `.tsx`. No JSX → `.ts`.
+- File over 200 lines → consider splitting (see Open Questions on enforcement).
+
+---
+
 ## 1. Setting Up a Custom Theme
 
 Your application can switch between a default theme and a custom theme. This behavior is controlled by the **Enable Custom Theme & Icons** switch in the settings dialog, which toggles a value in `localStorage`.
