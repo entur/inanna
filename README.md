@@ -71,7 +71,7 @@ A Structured Starting Point for Open-Source Frontend Applications.
 
 * **Customize the Map:**
 
-  Adjust the map style via `src/mapStyle.ts`, or add layers and interactivity directly.
+  Adjust the map style via `src/map/mapStyle.ts`, or add layers and interactivity directly.
 
 * **Bring Your Own Icons:**
 
@@ -97,7 +97,7 @@ Your application can switch between a default theme and a custom theme. This beh
 
 * **`public/custom-theme-config.json`:** Define or override any MUI theme options here.
 
-* **`src/utils/createThemeFromConfig.ts`:** Converts the JSON configuration into an MUI theme object.
+* **`src/theme/createThemeFromConfig.ts`:** Converts the JSON configuration into an MUI theme object.
 
 ## Steps to customize your theme
 
@@ -144,7 +144,7 @@ The application’s icon loader resolves custom and default icons based on the *
 
 ## How it works
 
-* **`src/data/iconLoaderUtils.ts`** – `getIconUrl(name: string)` checks:
+* **`src/utils/iconLoaderUtils.ts`** – `getIconUrl(name: string)` checks:
 
     1. If custom features enabled:
 
@@ -166,7 +166,7 @@ The application’s icon loader resolves custom and default icons based on the *
 * **Use in components:**
 
   ```tsx
-  import { getIconUrl } from '../data/iconLoader';
+  import { getIconUrl } from '../utils/iconLoaderUtils';
   import { Box } from '@mui/material';
 
   const analyticsIconUrl = getIconUrl('analytics');
@@ -187,7 +187,7 @@ The application’s icon loader resolves custom and default icons based on the *
 
 ## 3. Expanding Theming with TypeScript Definitions
 
-Extend MUI’s theme object in `src/types/theme-config.d.ts` for additional custom properties.
+Extend MUI’s theme object in `src/theme/theme-config.d.ts` for additional custom properties.
 
 ## How it works
 
@@ -197,7 +197,7 @@ Extend MUI’s theme object in `src/types/theme-config.d.ts` for additional cust
 
 ## Steps to extend the theme
 
-* **Define new properties** in `src/types/theme-config.d.ts`:
+* **Define new properties** in `src/theme/theme-config.d.ts`:
 
   ```ts
   import type { ThemeOptions } from '@mui/material/styles';
@@ -284,7 +284,7 @@ Extend MUI’s theme object in `src/types/theme-config.d.ts` for additional cust
   export default MyCustomComponent;
   ```
 
-The `createThemeFromConfig` utility in `src/utils/createThemeFromConfig.ts` will automatically include all custom properties defined in your theme configs.
+The `createThemeFromConfig` utility in `src/theme/createThemeFromConfig.ts` will automatically include all custom properties defined in your theme configs.
 
 ---
 
