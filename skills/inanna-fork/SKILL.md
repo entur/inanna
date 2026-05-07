@@ -107,27 +107,33 @@ Ask: "What's the new domain?" Sort it into one of these:
 
 **Path A — NeTEx-shaped (transit data).** Lines, Routes, JourneyPatterns, ServiceJourneys, Vehicles, Fares, etc.
 
-The fork installs `entur/netex-typescript-model` as a published tarball — no local clone of that repo is needed. Pick the assembly that covers the user's entities, install it, then call the bundled `netex-ts-gen` CLI.
+`entur/netex-typescript-model` ships **two artifacts per release**: the full JSON Schema as a standalone file, and the codegen CLI as an npm-installable tarball. There's no local clone of that repo, and the per-assembly choice from earlier versions is gone — the full schema is a single file that covers everything.
 
-1. **Pick the assembly.** Each assembly bundles its own JSON Schema; pick the smallest one that covers all the entities the user wants. See `references/netex-entities.md` for the entity-to-assembly mapping. As of v0.4.1:
-   - `base` — Site Frame (StopPlace, Quay, ParentStopPlace, geography)
-   - `network+timetable` — `base` + Lines, Routes, JourneyPatterns, ServiceJourneys, schedules
-   - `fares+network+new-modes+timetable` — full set including fares and on-demand
-2. **Install the tarball as a devDep:**
+1. **Fetch the schema** into the fork and commit it (so builds are reproducible without a network):
    ```bash
    cd <fork>
-   npm install -D https://github.com/entur/netex-typescript-model/releases/download/v0.4.1/netex-2.0-v2.0-<assembly>-v0.4.1.tgz
+   curl -L -O https://github.com/entur/netex-typescript-model/releases/latest/download/netex-jsonschema-full-2.0.json
    ```
-   Replace `<assembly>` with one of the three names above. The release version (`v0.4.1`) should be the latest at the time of forking — verify with `gh release list -R entur/netex-typescript-model` before running.
+2. **Install the codegen CLI as a devDep:**
+   ```bash
+   npm install -D https://github.com/entur/netex-typescript-model/releases/latest/download/netex-ts-gen.tgz
+   ```
 3. **Look up entity names.** Map domain words → NeTEx entity names via `references/netex-entities.md` (case-sensitive: `VehicleType`, not `vehicleType`).
 4. **Generate types into the fork:**
    ```bash
-   npx netex-ts-gen --dest-dir src/data/<feature> --overwrite \
+   npx netex-ts-gen --schema ./netex-jsonschema-full-2.0.json \
+     --dest-dir src/data/<feature> --overwrite \
      --collapse-refs --collapse-collections \
      <Entity1> <Entity2>
    ```
-   This produces `<Entity>.ts` (interface + transitive deps, self-contained) and `<Entity>-mapping.ts` (XML serialization). `--collapse-refs --collapse-collections` is recommended for ergonomic types — drop those flags if the fork needs verbatim NeTEx structure.
-5. If the user's entities span more than one assembly's coverage, install both tarballs side-by-side (different package names) and use `npx netex-ts-gen --schema ./node_modules/@entur/netex-typescript-model-<other>/<other>.schema.json ...` to point at a specific bundled schema.
+   This produces `<Entity>.ts` (interface + transitive deps, self-contained) and `<Entity>-mapping.ts` (XML serialization). `--collapse-refs --collapse-collections` produces ergonomic, target-aware types (`Ref<'DeckPlan'>` instead of `VersionOfObjectRefStructure`) — drop those flags only if the fork needs verbatim NeTEx structure.
+
+For reproducibility, pin to a specific release tag instead of `latest`:
+   ```bash
+   TAG=v0.5.0
+   curl -L -O https://github.com/entur/netex-typescript-model/releases/download/$TAG/netex-jsonschema-full-2.0-$TAG.json
+   npm install -D https://github.com/entur/netex-typescript-model/releases/download/$TAG/netex-ts-gen-$TAG.tgz
+   ```
 
 **Path B — Non-NeTEx domain.** Anything else (custom data, not modelled by NeTEx).
 - Interview the user on entities, cardinalities, primary-key shape, optionality.
@@ -171,6 +177,6 @@ When the skill finishes, the user has:
 ## References (kept short on purpose)
 
 - **`references/netex-entities.md`** — domain word → NeTEx entity name lookup. Read this when invoking Path A in Phase 3.
-- **`entur/netex-typescript-model` releases** — the generator, published as installable `.tgz` tarballs (no local clone needed). Latest tag: check `gh release list -R entur/netex-typescript-model`. Each tarball bundles a `bin: netex-ts-gen` CLI plus an assembly's JSON Schema.
+- **`entur/netex-typescript-model` releases** — two artifacts per release: `netex-jsonschema-full-2.0.json` (the full NeTEx 2.0 JSON Schema, fetched with `curl`) and `netex-ts-gen.tgz` (the codegen CLI, installed via `npm`). Use the `latest` redirect to track HEAD, or pin a tag for reproducible builds. There is no local clone of that repo, and no per-assembly choice — the full schema covers everything.
 - **`entur/sobek`** — Spring Boot backend producing NeTEx GraphQL. Reference for backend/frontend type alignment.
 - **`OPEN_QUESTIONS.md`** in the forked repo itself — read fresh from the new fork in Phase 2.

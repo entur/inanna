@@ -23,66 +23,68 @@ When the user describes their domain in plain words, map to the NeTEx entity nam
 | fare / ticket type | `FareProduct`, `PreassignedFareProduct` | Part 3 (fares). |
 | fare zone / tariff zone | `TariffZone`, `FareZone` | Geographic zones for fare calculation. |
 | validity / "when does this apply" | `ValidBetween`, `OperatingPeriod`, `DayType` | Temporal bounds on entities. |
-| flexible / on-demand transport | Part 5 entities (`FlexibleService`, `BookingArrangement`) | Use `ASSEMBLY=new-modes`. |
+| flexible / on-demand transport | `FlexibleService`, `BookingArrangement` | NeTEx Part 5 entities. |
 
-## How to generate (no local clone — install the published tarball)
+## How to generate (fetch schema + install CLI tarball)
 
-`entur/netex-typescript-model` publishes one `.tgz` per assembly per release. Each tarball is npm-installable and exposes a `netex-ts-gen` CLI. The fork project depends on a tarball directly; the source repo is never cloned.
+`entur/netex-typescript-model` ships **two artifacts per release**:
+- **`netex-jsonschema-full-2.0.json`** — the full NeTEx 2.0 JSON Schema (Draft 07) with `x-netex-*` annotations. One file, covers everything (no per-assembly split).
+- **`netex-ts-gen.tgz`** — the codegen CLI, installable as a normal npm dependency.
 
-### Step 1 — pick the assembly
+The fork project depends on the CLI tarball; the source repo is never cloned. The schema file is committed into the fork so builds are reproducible without a network round-trip.
 
-| Assembly | Covers | Use when |
-|---|---|---|
-| `base` | Site Frame: `StopPlace`, `Quay`, `ParentStopPlace`, geography | Stop-place registry forks |
-| `network+timetable` | `base` + Lines, Routes, JourneyPatterns, ServiceJourneys, schedules | Timetable / routing forks |
-| `fares+network+new-modes+timetable` | Everything including Part 3 (fares) and Part 5 (on-demand) | Fare-aware or flexible-transport forks |
-
-Pick the smallest assembly that covers all the user's entities. Multiple assemblies can be installed side-by-side under different package names if the entities cross boundaries.
-
-### Step 2 — find the latest release
-
-```bash
-gh release list -R entur/netex-typescript-model | head -1
-gh release view <tag> -R entur/netex-typescript-model --json assets --jq '.assets[].name'
-```
-
-This gives the version (e.g. `v0.4.1`) and the exact tarball filenames (e.g. `netex-2.0-v2.0-base-v0.4.1.tgz`).
-
-### Step 3 — install into the fork
+### Step 1 — fetch the schema into the fork
 
 ```bash
 cd <fork>
-npm install -D https://github.com/entur/netex-typescript-model/releases/download/<tag>/netex-2.0-v2.0-<assembly>-<tag>.tgz
+curl -L -O https://github.com/entur/netex-typescript-model/releases/latest/download/netex-jsonschema-full-2.0.json
 ```
 
-This adds `@entur/netex-typescript-model-<assembly-slug>` to `devDependencies`. The bundled JSON Schema lives at `node_modules/@entur/netex-typescript-model-<slug>/<assembly>.schema.json`.
-
-### Step 4 — generate
+Commit the file. For reproducible builds pin a tag instead of `latest`:
 
 ```bash
-cd <fork>
-npx netex-ts-gen --dest-dir src/data/<feature> --overwrite \
+TAG=v0.5.0
+curl -L -O https://github.com/entur/netex-typescript-model/releases/download/$TAG/netex-jsonschema-full-2.0-$TAG.json
+```
+
+### Step 2 — install the codegen CLI
+
+```bash
+npm install -D https://github.com/entur/netex-typescript-model/releases/latest/download/netex-ts-gen.tgz
+```
+
+Pinned variant:
+
+```bash
+npm install -D https://github.com/entur/netex-typescript-model/releases/download/$TAG/netex-ts-gen-$TAG.tgz
+```
+
+### Step 3 — generate
+
+```bash
+npx netex-ts-gen --schema ./netex-jsonschema-full-2.0.json \
+  --dest-dir src/data/<feature> --overwrite \
   --collapse-refs --collapse-collections \
   <EntityName1> <EntityName2>
 ```
 
 Per target `<Name>` you get:
 - `<Name>.ts` — interface + all transitive type deps (self-contained)
-- `<Name>-mapping.ts` — XML serialization functions
+- `<Name>-mapping.ts` — XML serialization functions (pair with `fast-xml-parser`'s XMLBuilder to emit NeTEx XML)
 
 ### CLI flags
 
-| Flag | Effect |
-|---|---|
-| `--dest-dir <path>` | Where to write the `.ts` files (default `/tmp`) |
-| `--overwrite` | Replace existing files |
-| `--collapse-refs` | Inline single-target ref types — recommended for ergonomic types |
-| `--collapse-collections` | Inline single-child collection wrappers — recommended |
-| `--schema <path>` | Use a different `.schema.json` (e.g. another tarball's bundled schema) |
-| `--exclude <prop>` | Strip a property from generated types |
-| `--suffix <s>` | Tag output filenames |
+| Flag | Default | Effect |
+|---|---|---|
+| `--schema <path>` | (required) | Path to the JSON Schema fetched in Step 1 |
+| `--dest-dir <path>` | `/tmp` | Where to write the `.ts` files |
+| `--overwrite` | `false` | Replace existing output files (otherwise skipped) |
+| `--collapse-refs` | `false` | Replace `VersionOfObjectRefStructure` with target-aware `Ref<'Entity'>` / `SimpleRef` — recommended for ergonomic types |
+| `--collapse-collections` | `false` | Replace single-child `_RelStructure` wrappers with the child entity type — recommended |
+| `--exclude <a,b,...>` | (none) | Comma-separated property names to strip (e.g. `$changed,$created,$modification,Extensions,alternativeTexts`) |
+| `--suffix <s>` | `""` | Append to output filenames (`Vehicle.ts` → `Vehicle-<s>.ts`) |
 
-All output is type-checked with `tsc --strict`; exit code is 1 if any target fails to compile.
+Each output file is type-checked with `tsc --strict --skipLibCheck`; exit code is 0 if all targets pass, 1 otherwise. Unknown entity names are skipped with a warning.
 
 ## When the user's domain isn't NeTEx
 
