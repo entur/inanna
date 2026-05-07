@@ -17,6 +17,20 @@ A Structured Starting Point for Open-Source Frontend Applications.
 
 ---
 
+## Forking Inanna with the `inanna-fork` skill
+
+This branch ships a Claude skill that scaffolds a clean Inanna fork, walks you through the [open questions](OPEN_QUESTIONS.md), and — for transit/NeTEx domains — generates TypeScript types via the [`netex-typescript-model`](https://github.com/entur/netex-typescript-model) tooling.
+
+Install it globally:
+
+```bash
+npx skills add https://github.com/entur/inanna#fix/issue5-docs -g -y
+```
+
+Then in Claude Code, ask something like *"fork inanna into ~/projects/my-app called my-app"* and the skill takes over. The skill source lives in [`skills/inanna-fork/`](skills/inanna-fork/).
+
+---
+
 ## Features
 
 * **Configurable Theming:**
