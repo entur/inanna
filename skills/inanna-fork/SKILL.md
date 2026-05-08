@@ -1,6 +1,6 @@
 ---
 name: inanna-fork
-description: Bootstrap a clean Inanna fork. Copy the repo to a target path, walk the user through Inanna's OPEN_QUESTIONS.md to capture design decisions, help replace the example domain (stop-places/products) with the user's own, and — if the new domain is NeTEx-shaped (transit data) — generate TypeScript types via the entur/netex-typescript-model ts-gen tool. Trigger this skill whenever a user mentions forking Inanna, scaffolding a new project from Inanna, customizing Inanna for a different domain, replacing the stop-place example, or extending Inanna toward another NeTEx subdomain — even if they don't say "skill" or "fork" explicitly.
+description: Bootstrap a clean Inanna fork OR extend an already-forked Inanna with new entities/features. Bootstrap mode copies the repo to a target path, walks the user through OPEN_QUESTIONS.md to capture design decisions, and helps replace the example domain (stop-places/products) with the user's own. Extend mode skips the scaffold and jumps straight to entity modelling against an existing fork. In both modes — if the domain is NeTEx-shaped (transit data) — TypeScript types are generated via the entur/netex-typescript-model ts-gen tool. Trigger whenever a user mentions forking Inanna, scaffolding a new project from Inanna, customizing Inanna for a different domain, replacing the stop-place example, adding entities/features to an existing fork, or extending Inanna toward another NeTEx subdomain — even if they don't say "skill" or "fork" explicitly.
 ---
 
 # Inanna Fork Skill
@@ -17,19 +17,47 @@ This skill walks both problems: it scaffolds a clean copy, captures decisions on
 
 ## When to trigger
 
+Bootstrap-flavoured:
 - "I want to fork Inanna for X"
 - "Help me start a new project from Inanna"
 - "I forked Inanna, now what?"
 - "How do I add my own data to Inanna?"
 - "Replace the stop-place example with Y"
+
+Extend-flavoured (an already-forked Inanna):
+- "I forked Inanna and want to add `<Entity>`"
+- "Add a new feature to my Inanna fork"
+- "Extend my fork's entity graph with X"
 - "Extend Inanna for vehicles/journeys/fares"
-- Any combination of `inanna` + `fork` / `customize` / `extend` / `scaffold` / `replace`.
 
-## Workflow (4 phases — do them in order)
+Any combination of `inanna` + `fork` / `customize` / `extend` / `scaffold` / `replace` / `add entity` / `extend entity graph`.
 
-### Phase 1: Coarse decisions + bootstrap
+## Workflow
 
-Before anything else, ask three coarse yes/no questions. They gate large chunks of the rest of the workflow, so getting them upfront avoids drilling into details that may not apply.
+The skill has two modes selected in Phase 0: **bootstrap** (fresh fork) and **extend** (already-forked tree). Phases are gated by mode; Phase 3 is shared.
+
+```
+Phase 0    Mode selection: bootstrap | extend
+Phase 1    Coarse decisions + scaffold.sh                    [bootstrap]
+Phase 1-ext Coarse decisions for extending an existing fork  [extend]
+Phase 2    OPEN_QUESTIONS capture → FORK_DECISIONS.md        [bootstrap]
+Phase 3    Model the new domain                              [shared]
+Phase 4    Apply decisions, wire the new domain              [bootstrap]
+Phase 4-ext Wire new domain into existing fork               [extend]
+```
+
+### Phase 0: Mode selection
+
+Before anything else, ask one root question. **Do not auto-detect** — a heuristic peeking at cwd (e.g. `package.json` name, presence of `OPEN_QUESTIONS.md`) is brittle and a wrong default is more annoying than one extra sentence per session.
+
+> Are you (a) **bootstrapping** a new fork from upstream, or (b) **extending** an already-forked Inanna?
+
+- **Bootstrap** → continue to Phase 1.
+- **Extend** → ask for the absolute path of the existing fork (no default — the user types it). `cd` there for the rest of the session, then jump to Phase 1-ext. Phases 1 and 2 do not run.
+
+### Phase 1 (bootstrap mode): Coarse decisions + scaffold
+
+After Phase 0 has selected bootstrap mode, ask three coarse yes/no questions. They gate large chunks of the rest of the workflow, so getting them upfront avoids drilling into details that may not apply.
 
 **Ask all three together as a single batch — do not ask the ten OPEN_QUESTIONS at this stage.**
 
@@ -63,7 +91,30 @@ The script does a shallow `--single-branch` clone, deletes the upstream `.git`, 
 
 Verify by running `npm install` then `npm run dev` in the new target. Don't proceed to Phase 2 until the dev server boots.
 
-### Phase 2: Capture decisions on the open questions
+### Phase 1-ext (extend mode): Coarse decisions
+
+Skipped in bootstrap mode. The user already has a fork (path captured in Phase 0); the goal here is to figure out what they're adding and where it slots. Ask all four questions together as one batch:
+
+1. **Domain shape?**
+   - *NeTEx* (Path A in Phase 3) — entities defined by the NeTEx schema (Lines, Routes, Vehicles, etc.).
+   - *Hand-written* (Path B) — custom domain not modelled by NeTEx.
+   - *Augment existing* (Path C, Phase 3) — adding entities to a feature dir that's already been generated (e.g. add `JourneyPattern` to a folder that already contains generated `Line` and `Route`).
+
+2. **Slot it where?**
+   - New feature dir `src/data/<name>/` (default).
+   - Inside an existing feature dir (Path C territory).
+   - Types/hook only, no new dir (when a sibling feature consumes it).
+
+3. **View integration?**
+   - New `*ViewConfig.ts` + new page under `src/pages/` + new route in `App.tsx` (default).
+   - Reuse an existing view (data flows into a view that already exists).
+   - Non-UI — types/hook only, no view.
+
+4. **Path A only — `netex-ts-gen` already installed?** Check `package.json` devDeps. If yes, Phase 3 skips the install + schema fetch; if no, Phase 3 runs them. Same goes for `netex-jsonschema-full-2.0.json` at the repo root.
+
+These supersede bootstrap's "keep/drop demo" and "wholesale/interview" coarse questions.
+
+### Phase 2 (bootstrap mode): Capture decisions on the open questions
 
 Read `OPEN_QUESTIONS.md` at the new fork's root. The behaviour here depends on the Phase-1 answer to question 2 (wholesale vs interview).
 
@@ -101,9 +152,9 @@ Walk each open question one at a time. For each: present the leak (cite file pat
 
 In both modes, `FORK_DECISIONS.md` becomes the punch-list for Phase 4 and beyond.
 
-### Phase 3: Model the new domain
+### Phase 3: Model the new domain (shared by both modes)
 
-Ask: "What's the new domain?" Sort it into one of these:
+Ask: "What's the new domain?" In **bootstrap** mode this is wide open. In **extend** mode the answer was already captured in Phase 1-ext (Path A / B / C). Sort into one of these:
 
 **Path A — NeTEx-shaped (transit data).** Lines, Routes, JourneyPatterns, ServiceJourneys, Vehicles, Fares, etc.
 
@@ -135,17 +186,44 @@ For reproducibility, pin to a specific release tag instead of `latest`:
    npm install -D https://github.com/entur/netex-typescript-model/releases/download/$TAG/netex-ts-gen-$TAG.tgz
    ```
 
+**In extend mode**, skip steps the fork already has done:
+- `grep '"netex-ts-gen"' package.json` — if present, skip the `npm install -D` step.
+- If `netex-jsonschema-full-2.0.json` is already at the repo root, skip the `curl`. Tell the user to bump it manually if they want a newer schema version (re-run the curl, commit the change).
+- Generate into the dir chosen by the Phase 1-ext slotting answer (`--dest-dir src/data/<feature>`).
+
 **Path B — Non-NeTEx domain.** Anything else (custom data, not modelled by NeTEx).
 - Interview the user on entities, cardinalities, primary-key shape, optionality.
 - Produce hand-written `<Feature>Types.ts` files that follow the existing convention (`viewConfigTypes`, `productTypes`, `stopPlaceTypes`).
 
-For both paths, every domain feature needs:
+**Path C — Augmenting an existing typed feature (extend mode only).** The fork already generated some entities into `src/data/<feature>/` and the user now wants to add another entity to the same feature (e.g. `Line` and `Route` are already there, now add `JourneyPattern`). Two sub-paths — show **both** to the user and let them pick:
+
+- **C1 — Incremental add (no regen):**
+  ```bash
+  npx netex-ts-gen --schema ./netex-jsonschema-full-2.0.json \
+    --dest-dir src/data/<feature> \
+    --collapse-refs --collapse-collections \
+    JourneyPattern   # <-- only the new entity
+  ```
+  Existing files are preserved. The generator may emit transitive-dep files that overlap with files already in the dir — reconcile any duplicates by hand. Use this when the previously-generated files have hand-edits worth keeping (project-specific JSDoc, helpers, etc.).
+
+- **C2 — Full regen (recommended default):**
+  ```bash
+  npx netex-ts-gen --schema ./netex-jsonschema-full-2.0.json \
+    --dest-dir src/data/<feature> --overwrite \
+    --collapse-refs --collapse-collections \
+    Line Route JourneyPattern   # <-- old + new in one command
+  ```
+  Generator owns the directory; any hand-edits to `<Entity>.ts` / `<Entity>-mapping.ts` are lost. Cleanest output, deterministic, refs resolve consistently. Recommend this unless the user confirms they have hand-edits to preserve.
+
+Across all three paths, a domain feature needs:
 1. A type file (`<Feature>Types.ts` or generated `<Entity>.ts`)
 2. A data hook returning that type — model on `src/data/stop-places/useStopPlaces.ts` or `src/data/products/useProducts.ts`
 3. A view config (`<feature>ViewConfig.ts`) that drives `GenericDataViewPage`
 4. A route entry in `App.tsx`
 
-### Phase 4: Apply decisions, wire the new domain
+In **extend** mode, items 2–4 only apply when the Phase-1-ext "view integration" answer was *new view*. For *reuse existing* or *non-UI* the relevant pieces are skipped.
+
+### Phase 4 (bootstrap mode): Apply decisions, wire the new domain
 
 Behaviour depends on the Phase-1 answer to question 1 (keep stop-place demo or drop):
 
@@ -159,6 +237,19 @@ Then, in order:
 
 After Phase 4, `npm run dev` should still boot, and the new domain's data view should load (with stub data if the backend isn't ready).
 
+### Phase 4-ext (extend mode): Wire new domain into existing fork
+
+Bootstrap's Phase 4 doesn't run in extend mode — the fork is already wired and most of bootstrap's punch-list is irrelevant. Replace it with this shorter sequence:
+
+1. **Typecheck the generated/new types.** `npx tsc --noEmit`. Fix any unresolved refs before proceeding (most often: a missing entity in the Path A/C invocation).
+2. **Add the data hook** `use<Feature>.ts` modelled on `src/data/stop-places/useStopPlaces.ts` or `src/data/products/useProducts.ts`. Use stub data if no backend is wired up yet.
+3. **If new view** (per Phase 1-ext): create `<feature>ViewConfig.ts`, add a page component under `src/pages/`, register the route in `App.tsx`. Skip when reusing an existing view or going non-UI.
+4. **If map-displayable**: extend `EXAMPLE_MAP_FILTERS` / `EXAMPLE_ICONS`, or — if the fork has applied the issue-#5 prop refactor — pass the per-feature equivalents as props.
+5. **Smoke-test.** `npm run dev`, navigate to the new route, confirm the view renders.
+6. **Commit.** One commit per logical step (types, hook, view, route) keeps the diff readable.
+
+**Issue-#5 caveat.** If the fork hasn't applied the `FORK_DECISIONS.md` punch-list (i.e. generic infra still hardcodes `'ParentStopPlace'` and imports stop-place types), the new feature can still ship — it just has to piggyback on the same wrappers stop-places uses, perpetuating the leak. If the user wants to clean it up, run bootstrap-mode Phase 2 + Phase 4 against the existing fork as a separate task; the skill flow doesn't try to detect or auto-apply this.
+
 ## What this skill does NOT do
 - Doesn't push to a remote — the user creates their own GitHub repo.
 - Doesn't choose a license (Inanna ships EUPL-1.2; the fork can change).
@@ -167,12 +258,23 @@ After Phase 4, `npm run dev` should still boot, and the new domain's data view s
 
 ## Output checklist
 
-When the skill finishes, the user has:
+### Bootstrap mode
+
 - [ ] A new project directory at the chosen path with a working `npm run dev`
 - [ ] `FORK_DECISIONS.md` at the new project's root, one section per open question, all answered
 - [ ] Type files (generated or hand-written) for the new domain under `src/data/<feature>/`
 - [ ] Updated `App.tsx` routes
 - [ ] First commit on the new repo's `main`
+
+### Extend mode
+
+- [ ] `npx tsc --noEmit` passes against the new types
+- [ ] New / augmented type files under `src/data/<feature>/`
+- [ ] Data hook returning the new types (real or stubbed)
+- [ ] New route reachable from the dev server (when "view integration" was *new view*)
+- [ ] `npm run dev` boots without regressions
+- [ ] Issue-#5 caveat acknowledged — either the fork was already cleaned up, or the new feature piggybacks on existing wrappers and the user knows it
+- [ ] One or more commits on the user's working branch
 
 ## References (kept short on purpose)
 
