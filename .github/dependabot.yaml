@@ -1,0 +1,30 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      time: "09:00"
+      timezone: "Europe/Oslo"
+    cooldown:
+      default-days: 1          # pilot value; the template default is 4 (Renovate parity)
+    groups:
+      auto-merge-minor-and-patch:
+        applies-to: version-updates
+        update-types: ["minor", "patch"]
+        patterns: ["*"]
+    # Majors intentionally ungrouped -> individual PRs, never auto-merged.
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      time: "09:00"
+      timezone: "Europe/Oslo"
+    cooldown:
+      default-days: 1
+    groups:
+      auto-merge-minor-and-patch:
+        applies-to: version-updates
+        update-types: ["minor", "patch"]
+        patterns: ["*"]

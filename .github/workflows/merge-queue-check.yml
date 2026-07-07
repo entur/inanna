@@ -1,0 +1,25 @@
+name: Merge queue check
+on:
+  merge_group:
+permissions:
+  contents: read
+jobs:
+  verify:
+    name: verify
+    runs-on: ubuntu-latest
+    steps:
+      - name: Report merge_group context (trigger + secrets hypothesis)
+        run: |
+          echo "event_name=${{ github.event_name }}"
+          echo "actor=${{ github.actor }}"
+          echo "ref=${{ github.ref }}"
+          echo "PILOT_SECRET populated: ${{ secrets.PILOT_SECRET != '' }}"
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run check
+      - run: npm run build
