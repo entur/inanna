@@ -14,7 +14,7 @@ jobs:
           echo "actor=${{ github.actor }}"
           echo "ref=${{ github.ref }}"
           echo "PILOT_SECRET populated: ${{ secrets.PILOT_SECRET != '' }}"
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with:
           node-version: 22.x
