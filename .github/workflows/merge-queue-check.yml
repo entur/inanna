@@ -1,5 +1,6 @@
 name: Merge queue check
 on:
+  pull_request:
   merge_group:
 permissions:
   contents: read
@@ -8,7 +9,7 @@ jobs:
     name: verify
     runs-on: ubuntu-latest
     steps:
-      - name: Report merge_group context (trigger + secrets hypothesis)
+      - name: Report context (trigger + secrets hypothesis)
         run: |
           echo "event_name=${{ github.event_name }}"
           echo "actor=${{ github.actor }}"
