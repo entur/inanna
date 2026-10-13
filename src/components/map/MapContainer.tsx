@@ -1,7 +1,11 @@
 import React, { type ReactNode, type RefObject } from 'react';
 import Map, { type MapRef, type MapLayerMouseEvent } from 'react-map-gl/maplibre';
-import type { StyleSpecification, MapLibreEvent } from 'maplibre-gl';
+import { setWorkerUrl, type StyleSpecification, type MapLibreEvent } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
+
+// maplibre-gl v6 can't locate its worker inside a bundler, so point it at the Vite-bundled worker.
+setWorkerUrl(maplibreWorkerUrl);
 
 interface MapContainerProps {
   children?: ReactNode;
