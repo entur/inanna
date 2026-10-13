@@ -15,7 +15,7 @@ export function useAppTheme(useCustomFeatures: boolean): {
   useEffect(() => {
     async function loadConfig() {
       setThemeError(null);
-      let configToSet: ThemeConfig | null = null;
+      let configToSet: ThemeConfig | null;
 
       try {
         if (useCustomFeatures) {
