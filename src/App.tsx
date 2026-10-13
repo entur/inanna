@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router';
 import Header from './components/header/Header.tsx';
 import Home from './pages/Home';
 import StopPlaceView from './pages/StopPlaceView.tsx';
@@ -18,7 +18,7 @@ export default function App() {
   const { theme } = useAppTheme(useCustomFeatures);
 
   return (
-    <BrowserRouter future={{ v7_relativeSplatPath: true }}>
+    <BrowserRouter>
       <SearchProvider>
         <ThemeProvider theme={theme}>
           <EditingProvider>

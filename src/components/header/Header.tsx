@@ -9,7 +9,7 @@ import HeaderBranding from './HeaderBranding.tsx';
 import DesktopSearchBar from '../search/DesktopSearchBar.tsx';
 import MobileSearchBar from '../search/MobileSearchBar.tsx';
 import HeaderActions from './HeaderActions.tsx';
-import { useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router';
 
 export default function Header() {
   const [drawerOpen, setDrawerOpen] = useState(false);

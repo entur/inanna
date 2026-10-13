@@ -1,7 +1,7 @@
 import { useMemo, useEffect, useRef } from 'react';
 import { Box } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import { useLocation } from 'react-router-dom'; // <-- Import useLocation
+import { useLocation } from 'react-router'; // <-- Import useLocation
 import { useStopsGeoJSON } from '../hooks/useStopsGeoJSON';
 import { useStopsSource } from '../hooks/useStopsSource';
 import { useResizableSidebar } from '../hooks/useResizableSidebar';
